@@ -67,24 +67,26 @@ class Post(CreatedTimeIsPublishedModel):
         User,
         on_delete=models.CASCADE,
         verbose_name='Автор публикации',
-        related_name='posts')
+        # related_name='posts'
+    )
     location = models.ForeignKey(
         Location,
         null=True,
         on_delete=models.SET_NULL,
         blank=True,
         verbose_name='Местоположение',
-        related_name='posts'
+        # related_name='posts'
     )
     category = models.ForeignKey(
         Category,
         null=True,
         on_delete=models.SET_NULL,
         verbose_name='Категория',
-        related_name='posts'
+        # related_name='posts'
     )
 
     class Meta:
+        default_related_name = 'posts'
         verbose_name = 'публикация'
         verbose_name_plural = 'Публикации'
         ordering = ('-pub_date',)
@@ -97,3 +99,30 @@ class Post(CreatedTimeIsPublishedModel):
                 f'{self.location=}, '
                 f'{self.category=}, '
                 f'{super().__str__()}')
+    
+    # TODO: post_form, cooment_form (и модель в том числе), user_form
+
+class Comment(models.Model):
+    text = models.TextField(
+        "Текст",
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name='Автор публикации',
+    )
+    post = models.ForeignKey(
+        Post,
+        on_delete=models.CASCADE,
+        verbose_name='Номер публикации',
+    )
+    created_at = models.DateTimeField(
+        'Добавлено',
+        auto_now_add=True,
+    )
+
+    class Meta:
+        default_related_name = 'comments'
+        ordering = ('created_at',)
+        verbose_name = 'комментарий'
+        verbose_name_plural = 'Комментарии'
