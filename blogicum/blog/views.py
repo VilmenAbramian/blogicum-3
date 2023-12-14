@@ -2,6 +2,7 @@ from typing import Any
 from django.db.models.query import QuerySet
 from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
+from django.urls import reverse_lazy, reverse
 
 from blog.models import Post, Category
 from django.contrib.auth.decorators import login_required
@@ -9,6 +10,9 @@ from django.views.generic import (
     CreateView, DeleteView, DetailView, ListView, UpdateView
 )
 from django.contrib.auth import get_user_model
+from django.contrib.auth.mixins import LoginRequiredMixin
+
+from .forms import PostForm, ProfileForm
 
 User = get_user_model()
 
@@ -48,12 +52,6 @@ def category_posts(request, category_slug):
                   {'post_list': filter_posts(category.posts),
                    'category': category})
 
-def todo_create(request):
-    pass
-
-def edit_profile():
-    pass
-
 class ProfileListView(ListView):
     model = Post
     template_name = 'blog/profile.html'
@@ -81,3 +79,38 @@ class ProfileListView(ListView):
         context = super().get_context_data(**kwargs)
         context['profile'] = self.get_user()
         return context
+    
+class PostCreateView(LoginRequiredMixin, CreateView):
+    model = Post
+    template_name = 'blog/create.html'
+    form_class = PostForm
+
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse(
+            'blog:profile', args=[self.request.user.username]
+        )
+    
+class ProfileUpdateView(LoginRequiredMixin, UpdateView):
+    model = User
+    template_name = 'blog/user.html'
+    form_class = ProfileForm
+    
+    def get_object(self, queryset=None):
+        if queryset is None:
+            queryset = self.get_queryset()
+        obj = queryset.get(username=self.request.user.username)
+        return obj
+
+    def get_success_url(self):
+        return reverse_lazy('blog:index')
+
+    # def dispatch(self, request, *args, **kwargs):
+    #     # Получаем объект по первичному ключу и автору или вызываем 404 ошибку.
+    #     get_object_or_404(User, username=self.kwargs['username'])
+    #     # Если объект был найден, то вызываем родительский метод, 
+    #     # чтобы работа CBV продолжилась.
+    #     return super().dispatch(request, *args, **kwargs) 

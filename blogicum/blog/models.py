@@ -100,7 +100,7 @@ class Post(CreatedTimeIsPublishedModel):
                 f'{self.category=}, '
                 f'{super().__str__()}')
     
-    # TODO: post_form, cooment_form (и модель в том числе), user_form
+    # TODO: cooment_form, user_form
 
 class Comment(models.Model):
     text = models.TextField(
