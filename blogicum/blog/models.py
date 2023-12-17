@@ -101,13 +101,12 @@ class Post(CreatedTimeIsPublishedModel):
                 f'{self.location=}, '
                 f'{self.category=}, '
                 f'{super().__str__()}')
-    
+
     def get_absolute_url(self):
         return reverse(
             'blog:post_detail', args=[self.pk]
         )
-    
-    # TODO: user_form
+
 
 class Comment(models.Model):
     text = models.TextField(
