@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.urls import reverse
 
 
 STRING_LENGTH = 25
@@ -84,6 +85,7 @@ class Post(CreatedTimeIsPublishedModel):
         verbose_name='Категория',
         # related_name='posts'
     )
+    image = models.ImageField('Фото', upload_to='post_images/', blank=True)
 
     class Meta:
         default_related_name = 'posts'
@@ -100,7 +102,12 @@ class Post(CreatedTimeIsPublishedModel):
                 f'{self.category=}, '
                 f'{super().__str__()}')
     
-    # TODO: cooment_form, user_form
+    def get_absolute_url(self):
+        return reverse(
+            'blog:post_detail', args=[self.pk]
+        )
+    
+    # TODO: user_form
 
 class Comment(models.Model):
     text = models.TextField(
