@@ -68,7 +68,6 @@ class Post(CreatedTimeIsPublishedModel):
         User,
         on_delete=models.CASCADE,
         verbose_name='Автор публикации',
-        # related_name='posts'
     )
     location = models.ForeignKey(
         Location,
@@ -76,7 +75,6 @@ class Post(CreatedTimeIsPublishedModel):
         on_delete=models.SET_NULL,
         blank=True,
         verbose_name='Местоположение',
-        # related_name='posts'
     )
     category = models.ForeignKey(
         Category,
