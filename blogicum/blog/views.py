@@ -14,9 +14,6 @@ from .models import Post, Category, Comment, User
 
 
 POSTS_PER_PAGE = 10
-filter_condition = dict(pub_date__lte=timezone.now(),
-                        is_published=True,
-                        category__is_published=True,)
 
 
 def filter_posts(posts, filter_flag=True):
@@ -26,7 +23,11 @@ def filter_posts(posts, filter_flag=True):
         'location', 'category', 'author',
     )
     if filter_flag:
-        queryset = queryset.filter(**filter_condition)
+        queryset = queryset.filter(
+            pub_date__lte=timezone.now(),
+            is_published=True,
+            category__is_published=True,
+        )
     return queryset.annotate(
         comment_count=Count('comments')
     ).order_by('-pub_date')
@@ -35,15 +36,17 @@ def filter_posts(posts, filter_flag=True):
 class CategoryListView(ListView):
     model = Post
     template_name = 'blog/category.html'
-    ordering = '-created_at'
     paginate_by = POSTS_PER_PAGE
     pk_url_kwarg = 'category_slug'
 
     def get_queryset(self):
-        category = get_object_or_404(Category,
-                                     is_published=True,
-                                     slug=self.kwargs[self.pk_url_kwarg])
-        return filter_posts(category.posts)
+        return filter_posts(
+            get_object_or_404(
+                Category,
+                is_published=True,
+                slug=self.kwargs[self.pk_url_kwarg]
+            ).posts
+        )
 
 
 class IndexListView(ListView):
@@ -65,14 +68,11 @@ class ProfileListView(ListView):
         return get_object_or_404(User, username=self.kwargs['username'])
 
     def get_queryset(self):
-        if self.request.user != self.get_user():
-            return filter_posts(
-                self.get_user().posts.prefetch_related('comments')
-            )
-        return filter_posts(
-            self.get_user().posts.prefetch_related('comments'),
-            filter_flag=False
-        )
+        if self.request.user == self.get_user():
+            flag = False
+        else:
+            flag = True
+        return filter_posts(self.get_user().posts, filter_flag=flag)
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         return dict(
@@ -89,7 +89,7 @@ class ProfileUpdateView(LoginRequiredMixin, UpdateView):
     def get_object(self, queryset=None):
         if queryset is None:
             queryset = self.get_queryset()
-        return queryset.get(username=self.request.user)
+        return queryset.get(username=str(self.request.user))
 
     def get_success_url(self):
         return reverse('blog:index')
@@ -120,14 +120,12 @@ class PostDetailView(DetailView):
         post = get_object_or_404(Post, pk=self.kwargs[self.pk_url_kwarg])
         if self.request.user != post.author:
             post = get_object_or_404(
-                Post,
+                filter_posts(Post.objects),
                 pk=self.kwargs[self.pk_url_kwarg],
-                **filter_condition
             )
         return post
 
     def get_context_data(self, **kwargs):
-        print(self.object.comments)
         return dict(
             **super().get_context_data(**kwargs),
             form=CommentForm(),
@@ -154,9 +152,10 @@ class PostUpdateView(PostUpdateDeleteMixin, LoginRequiredMixin, UpdateView):
 class PostDeleteView(PostUpdateDeleteMixin, LoginRequiredMixin, DeleteView):
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
-        context = super().get_context_data(**kwargs)
-        context['form'] = PostForm(instance=self.object)
-        return context
+        return dict(
+            **super().get_context_data(**kwargs),
+            form=PostForm(instance=self.object),
+        )
 
     def get_success_url(self):
         return reverse(
@@ -172,13 +171,7 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.author = self.request.user
-        self._post = (
-            get_object_or_404(
-                Post,
-                pk=self.kwargs['post_id'],
-            )
-        )
-        form.instance.post = self._post
+        form.instance.post = get_object_or_404(Post, pk=self.kwargs['post_id'])
         return super().form_valid(form)
 
     def get_success_url(self):
@@ -196,8 +189,6 @@ class CommentUpdateDeleteMixin():
             pk=self.kwargs['comment_id'],
             author=self.request.user
         )
-        if comment.author != self.request.user:
-            self.get_success_url(self)
         return comment
 
     def get_success_url(self):
