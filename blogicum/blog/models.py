@@ -89,6 +89,7 @@ class Post(CreatedTimeIsPublishedModel):
         default_related_name = 'posts'
         verbose_name = 'публикация'
         verbose_name_plural = 'Публикации'
+        ordering = ('-pub_date',)
 
     def __str__(self):
         return (f'{self.title[:STRING_LENGTH]=}, '

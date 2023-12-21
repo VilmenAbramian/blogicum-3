@@ -30,7 +30,7 @@ def filter_posts(posts, filter_flag=True):
         )
     return queryset.annotate(
         comment_count=Count('comments')
-    ).order_by('-pub_date')
+    ).order_by(Post._meta.ordering[0])
 
 
 class CategoryListView(ListView):
@@ -68,11 +68,10 @@ class ProfileListView(ListView):
         return get_object_or_404(User, username=self.kwargs['username'])
 
     def get_queryset(self):
-        if self.request.user == self.get_user():
-            flag = False
-        else:
-            flag = True
-        return filter_posts(self.get_user().posts, filter_flag=flag)
+        return filter_posts(
+            self.get_user().posts,
+            filter_flag=(self.request.user != self.get_user())
+        )
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         return dict(
@@ -89,7 +88,7 @@ class ProfileUpdateView(LoginRequiredMixin, UpdateView):
     def get_object(self, queryset=None):
         if queryset is None:
             queryset = self.get_queryset()
-        return queryset.get(username=str(self.request.user))
+        return queryset.get(username=self.request.user.username)
 
     def get_success_url(self):
         return reverse('blog:index')
