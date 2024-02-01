@@ -1,3 +1,4 @@
+
 # Django-проект Блогикум
 ## Версия 3
 В данную версию проекта были добавлены:
@@ -12,11 +13,13 @@
 
 ### Установка проекта:
 * Скачать репозиторий: git clone proj-name в рабочую папку
-* Создать виртуальное окружение: python -m venv venvname
-* Активировать виртуальное окружение: source venv/Scripts/activate
-* Установить необходимые библиотеки: pip install -r requirements.txt
-* Применить миграции: python manage.py migrate
-* Запустить сервер: python manage.py runserver
+* Выполнить команды в директории проекта:
+```
+python -m venv venvname
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver
+```
 
 ### Особенности проекта:
 * Проект состоит из нескольких приложений, а именно: blog (содержит основную функциональность проекта), pages (описывает работу статичных страниц)
