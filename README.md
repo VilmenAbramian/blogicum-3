@@ -16,10 +16,11 @@
 * Добавлено комментирование записей. Пользователи могут создавать, редактировать и удалять свои комментарии. Реализована пагинация и сортировка комментариев по дате добавления.
 
 ### Установка проекта:
-* Скачать репозиторий: git clone proj-name в рабочую папку
+* Скачать репозиторий: git clone ... в рабочую папку
 * Выполнить команды в директории проекта:
 ```
-python -m venv venvname
+python -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py runserver
