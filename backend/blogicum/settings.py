@@ -24,14 +24,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-sv$!l^ly@*aj*a59_nmsxl-q%k(x^1$g&d@x#kw5=^3qzfm1d='
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = bool(int(os.getenv('DEBUG', '0')))
 
 # ALLOWED_HOSTS = ['*']
 
-ALLOWED_HOSTS = [
-    'www.vilmen.pythonanywhere.com',
-    'vilmen.pythonanywhere.com',
-]
+ALLOWED_HOSTS = os.getenv(
+    'ALLOWED_HOSTS', default='127.0.0.1,localhost'
+).split(',')
+CSRF_TRUSTED_ORIGINS = os.getenv(
+    'CSRF_TRUSTED_ORIGINS', 'http://localhost'
+).split(',')
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10485760
 
 
 # Application definition
@@ -90,12 +93,26 @@ WSGI_APPLICATION = 'blogicum.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+IS_SQL_LITE = int(os.getenv('SQLITE', 0))
+
+if IS_SQL_LITE:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('POSTGRES_DB', 'django'),
+            'USER': os.getenv('POSTGRES_USER', 'django'),
+            'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
+            'HOST': os.getenv('DB_HOST', ''),
+            'PORT': os.getenv('DB_PORT', 5432)
+        }
+    }
 
 
 # Password validation
@@ -146,16 +163,12 @@ LOGIN_REDIRECT_URL = 'pages:about'
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
 
-STATIC_URL = '/static/'
-
 STATICFILES_DIRS = [
     BASE_DIR / 'static/',
 ]
 
-MEDIA_ROOT = BASE_DIR / 'media/'
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'collected_static'
 
-# MEDIA_URL = 'media/'
-
-if not DEBUG:
-    STATIC_ROOT = os.path.join(BASE_DIR, "static")
-    MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'

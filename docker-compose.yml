@@ -1,0 +1,39 @@
+# docker-compose.yml
+version: '3'
+
+volumes:
+  pg_data:
+  static:
+  media:
+
+services:
+  db:
+    image: postgres:13
+    env_file: .env
+    ports:
+      - 4432:5432
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend/
+    env_file: .env
+    ports:
+      - 8080:8000
+    depends_on:
+      - db
+    volumes:
+      - static:/app/collected_static
+      - media:/app/media
+
+  gateway:
+    build: ./gateway/
+    env_file: .env
+    depends_on:
+      - backend
+    volumes:
+      - static:/app/collected_static
+      - media:/app/media
+      - ./docs/:/usr/share/nginx/html/api/docs/
+    ports:
+      - 4080:80
