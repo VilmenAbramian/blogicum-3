@@ -19,7 +19,24 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install dependencies
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libjpeg-dev \
+            zlib1g-dev \
+            libpng-dev \
+            libfreetype6-dev \
+            liblcms2-dev \
+            libopenjp2-7-dev \
+            libtiff5-dev \
+            tk-dev \
+            tcl-dev \
+            libharfbuzz-dev \
+            libfribidi-dev \
+            libxcb1-dev
+
+      - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
@@ -29,8 +46,7 @@ jobs:
         env:
           SQLITE: "1"
           DEBUG: "1"
-        run: |
-          pytest
+        run: pytest
 
   build_backend_and_push_to_docker_hub:
     name: Push backend Docker image to DockerHub
